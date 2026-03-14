@@ -23,6 +23,13 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
+        volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+      volumes:
+      - name: jenkins-home
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
 ---
 apiVersion: v1
 kind: Service
