@@ -12,12 +12,26 @@ spec:
       labels:
         app: postgres
     spec:
+      securityContext:
+        runAsUser: 70 # รันเป็นยูสเซอร์ postgres (UID 70)
+        fsGroup: 70
       containers:
         - name: postgres
           image: postgres:16.13-alpine
           imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           ports:
             - containerPort: 5432
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
           envFrom:
             - configMapRef:
                 name: postgres-secret

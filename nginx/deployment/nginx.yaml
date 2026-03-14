@@ -17,6 +17,10 @@ spec:
       containers:
       - name: nginx-container
         image: nginx
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
         ports:
         - containerPort: 80
         resources: # กำหนดการใช้ Resource (วิศวกรที่ดีต้องใส่เสมอ)
