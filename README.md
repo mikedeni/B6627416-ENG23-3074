@@ -100,6 +100,8 @@ Visit: **http://jenkins.local**
 > kubectl exec -it $(kubectl get pod -l app=jenkins -o jsonpath='{.items[0].metadata.name}') -- cat /var/jenkins_home/secrets/initialAdminPassword
 > ```
 
+![Jenkins Dashboard](images/jenkins.jpeg)
+
 ### Grafana Monitoring — `grafana.local`
 
 Visit: **http://grafana.local**
@@ -107,6 +109,8 @@ Visit: **http://grafana.local**
 Default credentials: `admin` / `admin`
 
 > Prometheus data source URL (add in Grafana): `http://prometheus-service.monitoring.svc.cluster.local`
+
+![Grafana Dashboard](images/grafana.jpeg)
 
 ---
 
