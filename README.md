@@ -102,6 +102,8 @@ Visit: **http://jenkins.local**
 
 ![Jenkins Dashboard](images/jenkins.jpeg)
 
+![Jenkins Nodes](images/jenkins-nodes.png)
+
 ### Grafana Monitoring — `grafana.local`
 
 Visit: **http://grafana.local**
