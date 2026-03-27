@@ -15,71 +15,13 @@ A production-ready Kubernetes infrastructure boilerplate running on **Kind** (Ku
 
 ## Quick Start (Kind Cluster)
 
-### 1. Create Cluster with Ingress Support
-
-Run this command to create a Kind cluster with ports 80 and 443 exposed to the host:
-
 ```bash
-cat <<EOF | kind create cluster --name mycluster --config=-
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  kubeadmConfigPatches:
-  - |
-    kind: InitConfiguration
-    nodeRegistration:
-      kubeletExtraArgs:
-        node-labels: "ingress-ready=true"
-  extraPortMappings:
-  - containerPort: 80
-    hostPort: 80
-    protocol: TCP
-  - containerPort: 443
-    hostPort: 443
-    protocol: TCP
-EOF
+make up
 ```
 
-### 2. Install Nginx Ingress Controller
+This single command creates the Kind cluster (using `kind-config.yaml`), installs the Nginx Ingress Controller, adds `.local` domains to `/etc/hosts`, and deploys all services.
 
-```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
-```
-
-### 3. Add `.local` Domains to `/etc/hosts`
-
-```bash
-echo "127.0.0.1  my-nginx.local jenkins.local grafana.local" | sudo tee -a /etc/hosts
-```
-
-### 4. Deploy Everything
-
-```bash
-# Deploy Postgres & Nginx
-kubectl apply -f postgresql/
-kubectl apply -f nginx/deployment/
-kubectl apply -f nginx/service/
-kubectl apply -f nginx/ingress/
-
-# Deploy Jenkins
-kubectl apply -f jenkins/
-
-# Deploy Monitoring (Prometheus + Grafana)
-kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -f monitoring/
-```
-
-### 5. Verify All Pods Are Running
-
-```bash
-kubectl get pods -A
-kubectl get ingress -A
-```
+Run `make help` to see all available targets.
 
 ---
 
@@ -97,7 +39,7 @@ Visit: **http://jenkins.local**
 
 > First-time setup: retrieve the admin password with:
 > ```bash
-> kubectl exec -it $(kubectl get pod -l app=jenkins -o jsonpath='{.items[0].metadata.name}') -- cat /var/jenkins_home/secrets/initialAdminPassword
+> make jenkins-password
 > ```
 
 ![Jenkins Dashboard](images/jenkins.jpeg)
@@ -121,17 +63,10 @@ Default credentials: `admin` / `admin`
 If your cluster does **not** have port 80 mapped to the host (i.e. created without `extraPortMappings`), forward the Ingress controller instead:
 
 ```bash
-# Forward all ingress traffic to localhost:8080
-kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80 &
+make port-forward
 ```
 
-Then add this to `/etc/hosts`:
-
-```
-127.0.0.1  my-nginx.local jenkins.local grafana.local
-```
-
-Access services on port 8080:
+Then access services on port 8080:
 - **http://my-nginx.local:8080**
 - **http://jenkins.local:8080**
 - **http://grafana.local:8080**
@@ -154,6 +89,8 @@ Access services on port 8080:
 │   ├── prometheus.yaml        # Prometheus Deployment + Service + ConfigMap
 │   ├── grafana.yaml           # Grafana Deployment + Service
 │   └── grafana-ingress.yaml   # Ingress rule -> grafana.local
+├── kind-config.yaml  # Kind cluster config (ports 80/443 exposed)
+├── Makefile          # All lifecycle commands (make help)
 └── Jenkinsfile       # CI/CD pipeline definition
 ```
 
@@ -162,16 +99,13 @@ Access services on port 8080:
 ## Maintenance & Verification
 
 ```bash
-# Check all resources
-kubectl get pods -A
-kubectl get svc -A
-kubectl get ingress -A
-
-# Watch pod status
-kubectl get pods -w
-
-# Check ingress controller logs
-kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
+make status        # pods, services, ingresses
+make watch         # live pod status
+make events        # recent K8s events
+make logs-nginx    # tail Nginx logs
+make logs-jenkins  # tail Jenkins logs
+make logs-grafana  # tail Grafana logs
+make logs-ingress  # tail Ingress Controller logs
 ```
 
 ---
